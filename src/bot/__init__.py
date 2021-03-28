@@ -1,0 +1,1 @@
+from .robot606 import Robot606

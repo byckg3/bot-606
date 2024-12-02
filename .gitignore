@@ -4,3 +4,4 @@
 env.ini
 *.exe
 *.yaml
+*.json

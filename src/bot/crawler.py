@@ -31,7 +31,8 @@ class WebDriverFactory:
         opts.add_argument( "--lang=zh-TW" )
         if ( isHeadless ):
             opts.add_argument( "--headless" )
-            opts.add_argument( "--disable-gpu" )
+            # opts.add_argument( "--disable-gpu" )
+            # opts.add_argument( "--disable-software-rasterizer" )
             
         preferences = {
             "profile.default_content_setting_values.notifications": 2,

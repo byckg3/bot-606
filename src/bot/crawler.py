@@ -5,20 +5,22 @@ import json
 
 class Config:
     file_path: Path
-    file: dict[ str, any ] | list
+    content: dict[ str, any ] | list
     
     def __init__( self, path: str  ):
         self.file_path = Path( path )
+        if not self.file_path.exists():
+            raise FileNotFoundError( f"{ path } not found." )
         
         with open( self.file_path, 'r', encoding='utf-8') as file:
             if self.file_path.suffix == '.yaml':
-                self.file = yaml.safe_load( file )
+                self.content = yaml.safe_load( file )
             elif self.file_path.suffix == '.json':
-                self.file = json.load( file )
+                self.content = json.load( file )
      
     def update( self ):
         with open( self.file_path, "w", encoding="utf-8" ) as file:
-            yaml.dump( self.file, file, allow_unicode = True )
+            yaml.dump( self.content, file, allow_unicode = True )
 
 class WebDriverFactory:
     

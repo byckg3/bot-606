@@ -10,7 +10,7 @@ class Robot606( Client ):
 
     def _get_token( self ):
         token = os.getenv( self.token_name )
-        if token == None:
+        if token is None:
             env = {}
             with open( "env.ini" ) as file:
                 for line in file.readlines():
@@ -30,7 +30,7 @@ class Robot606( Client ):
             return
 
         if message.content.startswith( "hello" ):
-            await message.channel.send( "Fuck u!!" )
+            await message.channel.send( "Hi" )
 
     def run( self ):
         print( "bot is working..." )

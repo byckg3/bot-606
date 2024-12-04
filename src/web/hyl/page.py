@@ -82,3 +82,27 @@ class ZZZCheckInPage( HyLCheckInPage ):
     
     def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
         super().__init__( webdriver, config )
+        
+class HSRCheckInPage( HyLCheckInPage ):
+    close_icon_locator = ( By.XPATH, '//*[ contains( @class, "dialog-close" ) ]' )
+    ith_days_locator = (  By.XPATH, '//*[ contains( @style, "5ccbbab8f"  ) ]/*[  contains( @class, "no" ) ]' )
+    latest_days_locator = (  By.XPATH, '( //*[ contains( @class, "received" ) ] )[ last() ]/preceding-sibling::*[ contains( @class, "no" ) ]' )
+    finish_locator = ( By.XPATH, '//*[ contains( text(), "簽到成功" ) ]' )
+    
+    def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
+        super().__init__( webdriver, config )
+        
+class HyLPageFactory:
+    
+    @staticmethod
+    def create_page( page_name: str, webdriver: Chrome, config: dict[ str, any ] ) -> HyLCheckInPage:
+        
+        match page_name:
+            case "gsi":
+                return GSICheckInPage( webdriver, config )
+            case "zzz":
+                return ZZZCheckInPage( webdriver, config )
+            case "hsr":
+                return HSRCheckInPage( webdriver, config )
+            case _:
+                raise ValueError( f"Unknown page name: { page_name }" )

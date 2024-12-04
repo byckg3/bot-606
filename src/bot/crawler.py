@@ -51,8 +51,7 @@ class WebDriverFactory:
     @staticmethod
     def headless_chrome():
         return WebDriverFactory.chrome( True )
-
+    
 # python src/bot/crawler.py
 if __name__ == "__main__":
-    cfg = Config( "./task2_cookies.json" )
-    print( cfg.json[ 0 ][ "name" ] )
+    pass

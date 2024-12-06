@@ -29,8 +29,12 @@ def hylab_checkin( task_name: str ):
 
 
 # python src/checkin.py gsi
-# python src/checkin.py zzz
-# python src/checkin.py hsr
+# python src/checkin.py gsi zzz 
+# python src/checkin.py gsi zzz hsr
 if __name__ == "__main__":
-    target_name = sys.argv[1] if sys.argv[1] else "gsi"
-    hylab_checkin( target_name )
+    targets = [ "gsi" ]
+    if len( sys.argv ) >= 2:
+        targets = sys.argv[ 1: ]
+    
+    for target in targets:
+        hylab_checkin( target )

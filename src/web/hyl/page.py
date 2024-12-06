@@ -10,12 +10,8 @@ from web.hyl.component import HyLabHeader
 
 class HyLCheckInPage( ABC ):
     
-    header: HyLabHeader
-    close_icon_locator: tuple[ By, str ]
-    ith_days_locator: tuple[ By, str ]
-    latest_days_locator : tuple[ By, str ]
-    finish_locator : tuple[ By, str ]
-    
+    close_icon_locator: tuple[ By, str ] = ( By.XPATH, '//*[ contains( @class, "close") ]' )
+    finish_locator : tuple[ By, str ] = ( By.XPATH, '//*[ contains( text(), "簽到成功") ]' )
     
     def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
         self.driver = webdriver
@@ -23,10 +19,19 @@ class HyLCheckInPage( ABC ):
         self.current_progress = ""
         self.header = HyLabHeader( self.driver, self.config )
         
+    @property
+    @abstractmethod
+    def ith_days_locator( self ) -> tuple[ By, str ]:
+        pass
+    
+    @property
+    @abstractmethod
+    def latest_days_locator( self ) -> tuple[ By, str ]:
+        pass
+        
     def add_item_to_local_storage( self ) -> None:
         item: dict = self.config[ "ls_item" ]
-        key = item[ "key" ]
-        value = item[ "value" ]
+        key, value = item[ "key" ], item[ "value" ]  
         script = f"window.localStorage.setItem( '{ key }', '{ value }' );"
         
         self.driver.execute_script( script )
@@ -66,28 +71,27 @@ class HyLCheckInPage( ABC ):
         return self
     
 class GSICheckInPage( HyLCheckInPage ):
-    close_icon_locator = ( By.XPATH, '//*[ contains( @class, "guide-close" ) ]' )
+    
     ith_days_locator = (  By.XPATH, '//*[ contains( @class, "actived-day" ) ]/../*[ contains( @class, "item-day") ]' )
     latest_days_locator = (  By.XPATH, '( //*[ contains( @class, "has-signed" ) ])[ last() ]/*[ contains( @class, "item-day" ) ]' )
-    finish_locator = ( By.XPATH, '//*[  contains( text(), "簽到成功" ) ]' )
+    
     
     def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
         super().__init__( webdriver, config )
 
 class ZZZCheckInPage( HyLCheckInPage ):
-    close_icon_locator = ( By.XPATH, '//*[ contains( @class, "dialog-close" ) ]' )
+    
     ith_days_locator = (  By.XPATH, '//*[ contains( @style, "3b211daae47"  ) ]/*[  contains( @class, "no" ) ]' )
     latest_days_locator = (  By.XPATH, '( //*[ contains( @src, "d0ef8d6be" ) ] )[ last() ]/../*[ contains( @class, "no" ) ]' )
-    finish_locator = ( By.XPATH, '//*[ contains( text(), "簽到成功" ) ]' )
-    
+   
     def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
         super().__init__( webdriver, config )
         
 class HSRCheckInPage( HyLCheckInPage ):
-    close_icon_locator = ( By.XPATH, '//*[ contains( @class, "dialog-close" ) ]' )
+   
     ith_days_locator = (  By.XPATH, '//*[ contains( @style, "5ccbbab8f"  ) ]/*[  contains( @class, "no" ) ]' )
     latest_days_locator = (  By.XPATH, '( //*[ contains( @class, "received" ) ] )[ last() ]/preceding-sibling::*[ contains( @class, "no" ) ]' )
-    finish_locator = ( By.XPATH, '//*[ contains( text(), "簽到成功" ) ]' )
+    
     
     def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
         super().__init__( webdriver, config )

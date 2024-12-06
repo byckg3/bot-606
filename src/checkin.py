@@ -10,22 +10,32 @@ def hylab_checkin( task_name: str ):
     
     checkin_page = HyLPageFactory.create_page( task_name, driver, config.content )
     checkin_page.login()
-    checkin_page.daliy_checkin()
+    result = checkin_page.daliy_checkin()
     
-    print( driver.title )
-    output = Config( "./checkin_info.yaml" )
-    if ( not output.content[ task_name ][ "title" ] ):
-        output.content[ task_name ][ "title" ] = driver.title
-        
-    print( f" { checkin_page.current_progress }", end = " " )
-    if ( not output.content[ task_name ][ "progress" ] == checkin_page.current_progress ):
-        output.content[ task_name ][ "progress" ] = checkin_page.current_progress
-    else:
-        print( "已簽到" )
-        
-    output.update()
+    save_progress( task_name, result )
     
     driver.quit()
+    
+def save_progress( task_name: str, task: dict[ str, any ] ):
+    
+    print( task[ "title" ] )
+    output = Config( "./checkin_info.yaml" )
+    
+    if ( not output.content[ task_name ][ "title" ] ):
+        output.content[ task_name ][ "title" ] = task[ "title" ]
+        
+    print( f" { task[ "progress" ] }", end = " " )
+    if ( task[ "state" ] == "success" and not output.content[ task_name ][ "progress" ] == task[ "progress" ] ):
+        output.content[ task_name ][ "progress" ] = task[ "progress" ]
+        output.content[ task_name ][ "date" ] = task[ "date" ]
+        print( "簽到成功" )
+    elif output.content[ task_name ][ "progress" ] == task[ "progress" ]:
+        print( "已簽到" )
+    else:
+        print( "簽到失敗" )
+        
+    print( f"目前簽到: { output.content[ task_name ][ "date" ] }" )
+    output.update()
 
 
 # python src/checkin.py gsi

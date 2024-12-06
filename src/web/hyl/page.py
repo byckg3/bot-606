@@ -1,4 +1,5 @@
 import time
+from datetime import date
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 from selenium.webdriver.support.ui import WebDriverWait
@@ -53,22 +54,26 @@ class HyLCheckInPage( ABC ):
        
         return self
 
-    def daliy_checkin( self ) -> Self:
+    def daliy_checkin( self ) -> dict[ str, str]:
+        log = { "title": None, "state": "failed", "date": None }
+        log[ "title" ] = self.driver.title
         try:
             ith_days_element = WebDriverWait( self.driver, 3 ).until( EC.element_to_be_clickable( self.ith_days_locator ) )
-            self.current_progress = ith_days_element.text
-            ith_days_element.click()
+            log[ "progress" ] = ith_days_element.text
             
+            ith_days_element.click()
             WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.finish_locator ) )
             
+            log[ "state" ] = "success"
+            log[ "date" ] = date.today()
         except TimeoutException:
-            if ( not self.current_progress ):
-                self.current_progress = WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.latest_days_locator ) ).text
+            if ( log[ "state" ] == "failed" ):
+                log[ "progress" ] = WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.latest_days_locator ) ).text
             
         except Exception as ex:
             print( ex )
         
-        return self
+        return log
     
 class GSICheckInPage( HyLCheckInPage ):
     

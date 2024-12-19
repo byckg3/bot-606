@@ -1,41 +1,51 @@
 import sys
 from bot.crawler import Config, WebDriverFactory
+from bot.notifier import DiscordNotifier
 from web.hyl.page import HyLPageFactory
 
 def hylab_checkin( task_name: str ):
     config = Config( "./checkin_config.yaml" )
     
-    driver = WebDriverFactory.chrome()
+    driver = WebDriverFactory.headless_chrome()
     driver.get( config.content[ task_name + "_url" ] )
     
     checkin_page = HyLPageFactory.create_page( task_name, driver, config.content )
     checkin_page.login()
     result = checkin_page.daliy_checkin()
     
-    save_progress( task_name, result )
+    msg = save_progress( task_name, result )
+    
+    DiscordNotifier().notify( **msg )
     
     driver.quit()
     
 def save_progress( task_name: str, task: dict[ str, any ] ):
+    message: dict[ str, str ] = {}
+    saved_file = Config( "./checkin_info.yaml" )
     
-    print( task[ "title" ] )
-    output = Config( "./checkin_info.yaml" )
-    
-    if ( not output.content[ task_name ][ "title" ] ):
-        output.content[ task_name ][ "title" ] = task[ "title" ]
+    message[ "title" ] = task[ 'title' ]
+    if ( not saved_file.content[ task_name ][ "title" ] ):
+        saved_file.content[ task_name ][ "title" ] = task[ "title" ]
         
-    print( f" { task[ "progress" ] }", end = " " )
-    if ( task[ "state" ] == "success" and not output.content[ task_name ][ "progress" ] == task[ "progress" ] ):
-        output.content[ task_name ][ "progress" ] = task[ "progress" ]
-        output.content[ task_name ][ "date" ] = task[ "date" ]
-        print( "簽到成功" )
-    elif output.content[ task_name ][ "progress" ] == task[ "progress" ]:
-        print( "已簽到" )
+    message[ "description" ] = task[ 'progress' ]
+    if ( task[ "state" ] == "success" and not saved_file.content[ task_name ][ "progress" ] == task[ "progress" ] ):
+        saved_file.content[ task_name ][ "progress" ] = task[ "progress" ]
+        saved_file.content[ task_name ][ "date" ] = task[ "date" ]
+        message[ "description" ] += " 簽到成功"
+    elif saved_file.content[ task_name ][ "progress" ] == task[ "progress" ]:
+        message[ "description" ] += " 已簽到"
     else:
-        print( "簽到失敗" )
+        message[ "description" ] += " 簽到失敗"
         
-    print( f"目前簽到: { output.content[ task_name ][ "date" ] }" )
-    output.update()
+    message[ "description" ] += f"\n目前簽到: { saved_file.content[ task_name ][ 'date' ] }"
+    
+    saved_file.update()
+    print( message[ "title" ] + "\n" + message[ "description" ] )
+    
+    return message
+    
+def message_builder():
+    pass
 
 
 # python src/checkin.py gsi

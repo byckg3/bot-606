@@ -5,9 +5,9 @@ class DiscordNotifier:
     
     def __init__( self ):
         config = Config( "./discord_config.yaml" )
-        
         self.webhooks = config.content[ "webhooks" ]
-        self.COLER_RED = 16711680
+        self.name = "bot606"
+        self.COLER_RED = 16732497
         self.COLER_GREEN = 65280
         self.COLER_BLUE = 3447003
         
@@ -21,7 +21,7 @@ class DiscordNotifier:
                 color = self.COLER_BLUE
                 
         payload = {
-            "username": "bot606",
+            "username": self.name,
             "embeds": [
                 {
                     "title": kwargs[ "title" ],

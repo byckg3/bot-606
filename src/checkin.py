@@ -14,39 +14,43 @@ def hylab_checkin( task_name: str ):
     result = checkin_page.daliy_checkin()
     
     msg = save_progress( task_name, result )
+    msg[ "url" ] = config.content[ task_name + "_url" ]
     
     DiscordNotifier().notify( **msg )
     
     driver.quit()
     
 def save_progress( task_name: str, task: dict[ str, any ] ):
-    message: dict[ str, str ] = {}
+    
     saved_file = Config( "./checkin_info.yaml" )
+    message = { 
+        "title": "",
+        "state": "",
+        "progress": "",
+        "description": "",
+        "url": ""
+    }
     
     message[ "title" ] = task[ 'title' ]
     if ( not saved_file.content[ task_name ][ "title" ] ):
         saved_file.content[ task_name ][ "title" ] = task[ "title" ]
         
-    message[ "description" ] = task[ 'progress' ]
+    message[ "progress" ] = task[ 'progress' ]
     if ( task[ "state" ] == "success" and not saved_file.content[ task_name ][ "progress" ] == task[ "progress" ] ):
         saved_file.content[ task_name ][ "progress" ] = task[ "progress" ]
         saved_file.content[ task_name ][ "date" ] = task[ "date" ]
-        message[ "description" ] += " 簽到成功"
+        message[ "state" ] += "簽到成功"
     elif saved_file.content[ task_name ][ "progress" ] == task[ "progress" ]:
-        message[ "description" ] += " 已簽到"
+        message[ "state" ] += "已簽到"
     else:
-        message[ "description" ] += " 簽到失敗"
+        message[ "state" ] += "簽到失敗"
         
-    message[ "description" ] += f"\n目前簽到: { saved_file.content[ task_name ][ 'date' ] }"
+    message[ "description" ] += f"目前簽到: { saved_file.content[ task_name ][ 'date' ] }"
     
     saved_file.update()
-    print( message[ "title" ] + "\n" + message[ "description" ] )
+    print( f"{ message[ "title" ] }\n{ message[ "progress" ] } { message[ "state" ] }\n{ message[ "description" ] }" )
     
     return message
-    
-def message_builder():
-    pass
-
 
 # python src/checkin.py gsi
 # python src/checkin.py gsi zzz 

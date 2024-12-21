@@ -7,17 +7,27 @@ class DiscordNotifier:
         config = Config( "./discord_config.yaml" )
         
         self.webhooks = config.content[ "webhooks" ]
+        self.COLER_RED = 16711680
+        self.COLER_GREEN = 65280
+        self.COLER_BLUE = 3447003
         
-    def notify( self, title: str, description: str, url: str = None ):
+    def notify( self, **kwargs ):
         
+        color = self.COLER_RED
+        match kwargs[ "state" ]:
+            case "簽到成功":
+                color = self.COLER_GREEN
+            case "已簽到":
+                color = self.COLER_BLUE
+                
         payload = {
             "username": "bot606",
             "embeds": [
                 {
-                    "title": title,
-                    "url": url,
-                    "description": description,
-                    "color": 3447003
+                    "title": kwargs[ "title" ],
+                    "url": kwargs[ "url" ],
+                    "description": f"{ kwargs[ "progress" ] } { kwargs[ "state" ] }\n{ kwargs[ "description" ] } ",
+                    "color": color
                 }
             ]
         }

@@ -8,17 +8,45 @@ class Config:
     content: dict[ str, any ] | list
     
     def __init__( self, path: str  ):
-        self.file_path = Path( path )
-        if not self.file_path.exists():
-            raise FileNotFoundError( f"{ path } not found." )
+        self.load( path )
+    
+    @staticmethod
+    def error_handler( func ):
         
-        with open( self.file_path, 'r', encoding='utf-8') as file:
+        def wrapper( *args, **kwargs ):
+            
+            self = args[ 0 ]
+            if len( args )> 1 or "path" in kwargs:
+                path = kwargs.get( 'path', args[ 1 ] )
+                self.file_path = Path( path )
+            
+            if not self.file_path.exists():
+                raise FileNotFoundError( f"{ path } not found." )
+            
+            try:
+                result = func( *args, **kwargs )
+            
+            except yaml.YAMLError as ye:
+                print( f"Error parsing YAML file: { ye }" )
+            except json.JSONDecodeError as je:
+                print( f"Error parsing JSON file: { je }" )
+                
+            return result
+        
+        return wrapper
+    
+    @error_handler
+    def load( self, path: str ):
+        
+        with open( self.file_path, 'r', encoding='utf-8' ) as file:
             if self.file_path.suffix == '.yaml':
                 self.content = yaml.safe_load( file )
             elif self.file_path.suffix == '.json':
                 self.content = json.load( file )
-     
+    
+    @error_handler
     def update( self ):
+        
         with open( self.file_path, "w", encoding="utf-8" ) as file:
             yaml.dump( self.content, file, allow_unicode = True )
 

@@ -1,3 +1,4 @@
+from functools import wraps
 from selenium import webdriver
 from pathlib import Path
 import yaml
@@ -13,8 +14,8 @@ class Config:
     @staticmethod
     def error_handler( func ):
         
+        @wraps( func )
         def wrapper( *args, **kwargs ):
-            
             self = args[ 0 ]
             if len( args )> 1 or "path" in kwargs:
                 path = kwargs.get( 'path', args[ 1 ] )

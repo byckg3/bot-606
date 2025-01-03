@@ -55,6 +55,7 @@ class HyLCheckInPage( ABC ):
         return self
 
     def daliy_checkin( self ) -> dict[ str, str]:
+        
         log = { "title": None, "state": "failed", "date": None }
         log[ "title" ] = self.driver.title
         try:

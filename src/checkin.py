@@ -39,13 +39,13 @@ def save_progress( task_name: str, task: dict[ str, any ] ):
     if ( task[ "state" ] == "success" and not saved_file.content[ task_name ][ "progress" ] == task[ "progress" ] ):
         saved_file.content[ task_name ][ "progress" ] = task[ "progress" ]
         saved_file.content[ task_name ][ "date" ] = task[ "date" ]
-        message[ "state" ] += "簽到成功"
+        message[ "state" ] = "簽到成功"
     elif saved_file.content[ task_name ][ "progress" ] == task[ "progress" ]:
-        message[ "state" ] += "已簽到"
+        message[ "state" ] = "已簽到"
     else:
-        message[ "state" ] += "簽到失敗"
+        message[ "state" ] = "簽到失敗"
         
-    message[ "description" ] += f"目前簽到: { saved_file.content[ task_name ][ 'date' ] }"
+    message[ "description" ] = f"目前簽到: { saved_file.content[ task_name ][ 'date' ] }"
     
     saved_file.update()
     print( f"{ message[ "title" ] }\n{ message[ "progress" ] } { message[ "state" ] }\n{ message[ "description" ] }" )

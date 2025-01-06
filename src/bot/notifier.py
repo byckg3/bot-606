@@ -11,22 +11,25 @@ class DiscordNotifier:
         self.COLER_GREEN = 65280
         self.COLER_BLUE = 3447003
         
-    def notify( self, **kwargs ):
+    def notify( self, **msg ):
         
-        color = self.COLER_RED
-        match kwargs[ "state" ]:
+        prefix_text = f"{ msg[ "progress" ] } { msg[ "state" ] }"
+        match msg[ "state" ]:
             case "簽到成功":
                 color = self.COLER_GREEN
             case "已簽到":
                 color = self.COLER_BLUE
+            case _:
+                color = self.COLER_RED
+                prefix_text += f" [( Retry )]({ msg[ 'url' ] })"
                 
         payload = {
             "username": self.name,
             "embeds": [
                 {
-                    "title": kwargs[ "title" ],
-                    "url": kwargs[ "url" ],
-                    "description": f"{ kwargs[ "progress" ] } { kwargs[ "state" ] }\n{ kwargs[ "description" ] } ",
+                    "title": msg[ "title" ],
+                    "url": msg[ "url" ],
+                    "description": f"{ prefix_text }\n{ msg[ "description" ] } ",
                     "color": color
                 }
             ]

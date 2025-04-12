@@ -1,7 +1,15 @@
 # bot-606
-- Link
-    - [Discord Developer Portal](https://discord.com/developers/applications)
-    - [Heroku Dashboard](https://dashboard.heroku.com/)
+
+### commands
+- python -m venv .venv
+- .venv\Scripts\activate
+- deactivate
+- pip freeze > requirements.txt
+- pip install -r requirements.txt
 
 ## reference
+- [Discord Developer Portal](https://discord.com/developers/applications)
+- [Heroku Dashboard](https://dashboard.heroku.com/)
 - [The Selenium Browser Automation Project](https://www.selenium.dev/documentation/)
+- [Capabilities and ChromeOptions](https://developer.chrome.com/docs/chromedriver/capabilities)
+- [undetected-chromedriver](https://pypi.org/project/undetected-chromedriver/)

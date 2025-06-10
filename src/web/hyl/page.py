@@ -1,20 +1,20 @@
 import time
 from datetime import date
-from selenium.webdriver.common.by import By
+from selenium.webdriver.common.by import By, ByType
 from selenium.webdriver import Chrome
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from typing import Self
+from typing import Any, Self
 from abc import ABC, abstractmethod
 from web.hyl.component import HyLabHeader
 
 class HyLCheckInPage( ABC ):
     
-    close_icon_locator: tuple[ By, str ] = ( By.XPATH, '//*[ contains( @class, "close") ]' )
-    finish_locator : tuple[ By, str ] = ( By.XPATH, '//*[ contains( text(), "簽到成功") ]' )
+    close_icon_locator: tuple[ ByType, str ] = ( By.XPATH, '//*[ contains( @class, "close" ) ]' )
+    finish_locator : tuple[ ByType, str ] = ( By.XPATH, '//*[ contains( text(), "簽到成功" ) ]' )
     
-    def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
+    def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         self.driver = webdriver
         self.config = config
         self.current_progress = ""
@@ -22,12 +22,12 @@ class HyLCheckInPage( ABC ):
         
     @property
     @abstractmethod
-    def ith_days_locator( self ) -> tuple[ By, str ]:
+    def ith_days_locator( self ) -> tuple[ ByType, str ]:
         pass
     
     @property
     @abstractmethod
-    def latest_days_locator( self ) -> tuple[ By, str ]:
+    def latest_days_locator( self ) -> tuple[ ByType, str ]:
         pass
         
     def add_item_to_local_storage( self ) -> None:
@@ -78,34 +78,34 @@ class HyLCheckInPage( ABC ):
     
 class GSICheckInPage( HyLCheckInPage ):
     
-    ith_days_locator = (  By.XPATH, '//*[ contains( @class, "actived-day" ) ]/../*[ contains( @class, "item-day") ]' )
-    latest_days_locator = (  By.XPATH, '( //*[ contains( @class, "has-signed" ) ])[ last() ]/*[ contains( @class, "item-day" ) ]' )
+    ith_days_locator: tuple[ ByType, str ] = (  By.XPATH, '//*[ contains( @class, "actived-day" ) ]/../*[ contains( @class, "item-day") ]' )
+    latest_days_locator: tuple[ ByType, str ] = (  By.XPATH, '( //*[ contains( @class, "has-signed" ) ])[ last() ]/*[ contains( @class, "item-day" ) ]' )
     
     
-    def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
+    def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         super().__init__( webdriver, config )
 
 class ZZZCheckInPage( HyLCheckInPage ):
     
-    ith_days_locator = (  By.XPATH, '//*[ contains( @style, "3b211daae47"  ) ]/*[  contains( @class, "no" ) ]' )
-    latest_days_locator = (  By.XPATH, '( //*[ contains( @src, "d0ef8d6be" ) ] )[ last() ]/../*[ contains( @class, "no" ) ]' )
+    ith_days_locator: tuple[ ByType, str ] = (  By.XPATH, '//*[ contains( @style, "3b211daae47"  ) ]/*[  contains( @class, "no" ) ]' )
+    latest_days_locator: tuple[ ByType, str ] = (  By.XPATH, '( //*[ contains( @src, "d0ef8d6be" ) ] )[ last() ]/../*[ contains( @class, "no" ) ]' )
    
-    def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
+    def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         super().__init__( webdriver, config )
         
 class HSRCheckInPage( HyLCheckInPage ):
    
-    ith_days_locator = (  By.XPATH, '//*[ contains( @style, "5ccbbab8f"  ) ]/*[  contains( @class, "no" ) ]' )
-    latest_days_locator = (  By.XPATH, '( //*[ contains( @class, "received" ) ] )[ last() ]/preceding-sibling::*[ contains( @class, "no" ) ]' )
+    ith_days_locator: tuple[ ByType, str ] = (  By.XPATH, '//*[ contains( @style, "5ccbbab8f"  ) ]/*[  contains( @class, "no" ) ]' )
+    latest_days_locator: tuple[ ByType, str ] = (  By.XPATH, '( //*[ contains( @class, "received" ) ] )[ last() ]/preceding-sibling::*[ contains( @class, "no" ) ]' )
     
     
-    def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
+    def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         super().__init__( webdriver, config )
         
 class HyLPageFactory:
     
     @staticmethod
-    def create_page( page_name: str, webdriver: Chrome, config: dict[ str, any ] ) -> HyLCheckInPage:
+    def create_page( page_name: str, webdriver: Chrome, config: dict[ str, Any ] ) -> HyLCheckInPage:
         
         match page_name:
             case "gsi":

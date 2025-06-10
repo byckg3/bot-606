@@ -11,7 +11,7 @@ class DiscordNotifier:
         self.COLER_GREEN = 65280
         self.COLER_BLUE = 3447003
         
-    def notify( self, **msg ):
+    def notify( self, msg: dict[ str, str ] ):
         
         prefix_text = f"{ msg[ "progress" ] } { msg[ "state" ] }"
         match msg[ "state" ]:
@@ -46,4 +46,4 @@ class DiscordNotifier:
 # python src/bot/notifier.py
 if __name__ == "__main__":
     notifier = DiscordNotifier()
-    notifier.notify( "test_title", "test_description" )
+    notifier.notify( { "test_title": "test_description" } )

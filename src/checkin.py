@@ -1,4 +1,5 @@
 import sys
+from typing import Any
 from bot.crawler import Config, WebDriverFactory
 from bot.notifier import DiscordNotifier
 from web.hyl.page import HyLPageFactory
@@ -7,6 +8,7 @@ def hylab_checkin( task_name: str ):
     config = Config( "./checkin_config.yaml" )
     
     driver = WebDriverFactory.headless_chrome()
+    # driver = WebDriverFactory.chrome()
     driver.get( config.content[ task_name + "_url" ] )
     
     checkin_page = HyLPageFactory.create_page( task_name, driver, config.content )
@@ -16,11 +18,11 @@ def hylab_checkin( task_name: str ):
     msg = save_progress( task_name, result )
     msg[ "url" ] = config.content[ task_name + "_url" ]
     
-    DiscordNotifier().notify( **msg )
+    DiscordNotifier().notify( msg )
     
     driver.quit()
     
-def save_progress( task_name: str, task: dict[ str, any ] ):
+def save_progress( task_name: str, task: dict[ str, Any ] ):
     
     saved_file = Config( "./checkin_info.yaml" )
     message = { 

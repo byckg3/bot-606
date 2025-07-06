@@ -7,8 +7,12 @@ from web.hyl.page import HyLPageFactory
 def hylab_checkin( task_name: str ):
     config = Config( "./checkin_config.yaml" )
     
-    driver = WebDriverFactory.headless_chrome()
-    # driver = WebDriverFactory.chrome()
+    headless = 0
+    if headless:
+        driver = WebDriverFactory.headless_chrome()
+    else:
+        driver = WebDriverFactory.chrome()
+    
     driver.get( config.content[ task_name + "_url" ] )
     
     checkin_page = HyLPageFactory.create_page( task_name, driver, config.content )

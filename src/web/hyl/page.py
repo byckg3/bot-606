@@ -67,14 +67,20 @@ class HyLCheckInPage( ABC ):
             
             log[ "state" ] = "success"
             log[ "date" ] = date.today()
+
         except TimeoutException:
-            if ( log[ "state" ] == "failed" ):
+            if log[ "state" ] == "failed":
                 log[ "progress" ] = WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.latest_days_locator ) ).text
-            
+
         except Exception as ex:
+            self.save_screenshot()
             print( ex )
         
         return log
+    
+    def save_screenshot( self ):
+        timestamp = time.strftime( "%y%m%d_%H%M%S" )
+        self.driver.save_screenshot( self.config[ "screenshot_dir" ] + f"/{timestamp}.png" )
     
 class GSICheckInPage( HyLCheckInPage ):
     

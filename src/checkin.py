@@ -1,26 +1,27 @@
+import os
+import shutil
 import sys
 from typing import Any
 from bot.crawler import Config, WebDriverFactory
 from bot.notifier import DiscordNotifier
 from web.hyl.page import HyLPageFactory
 
-def hylab_checkin( task_name: str ):
-    config = Config( "./checkin_config.yaml" )
-    
-    headless = 0
+def hylab_checkin( config, task_name: str ):
+
+    headless = 1
     if headless:
         driver = WebDriverFactory.headless_chrome()
     else:
         driver = WebDriverFactory.chrome()
     
-    driver.get( config.content[ task_name + "_url" ] )
+    driver.get( config[ task_name + "_url" ] )
     
-    checkin_page = HyLPageFactory.create_page( task_name, driver, config.content )
+    checkin_page = HyLPageFactory.create_page( task_name, driver, config )
     checkin_page.login()
     result = checkin_page.daliy_checkin()
     
     msg = save_progress( task_name, result )
-    msg[ "url" ] = config.content[ task_name + "_url" ]
+    msg[ "url" ] = config[ task_name + "_url" ]
     
     DiscordNotifier().notify( msg )
     
@@ -58,13 +59,28 @@ def save_progress( task_name: str, task: dict[ str, Any ] ):
     
     return message
 
+
+def clear_screenshots( config ):
+    
+    dir_name = config[ "screenshot_dir"]
+
+    if os.path.exists( dir_name ):
+        shutil.rmtree( dir_name )
+
+    os.makedirs( dir_name )
+
 # python src/checkin.py gsi
 # python src/checkin.py gsi zzz 
 # python src/checkin.py gsi zzz hsr
 if __name__ == "__main__":
+    
     targets = [ "gsi" ]
     if len( sys.argv ) >= 2:
         targets = sys.argv[ 1: ]
     
+    config = Config( "./checkin_config.yaml" )
+
+    clear_screenshots( config.content )
+    
     for target in targets:
-        hylab_checkin( target )
+        hylab_checkin( config.content, target )

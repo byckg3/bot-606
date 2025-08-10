@@ -5,6 +5,8 @@
 - .venv\Scripts\activate
 - deactivate
 - pip freeze > requirements.txt
+- pip list --outdatedpip 
+- pip install -U selenium
 - pip install -r requirements.txt
 
 ## reference

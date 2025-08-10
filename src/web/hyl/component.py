@@ -4,14 +4,14 @@ from selenium.webdriver import Chrome
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from typing import Self
+from typing import Any, Self
 
 class HyLabHeader:
     
     before_login_locator = ( By.XPATH, '//*[ contains( @class, "avatar-icon" ) and contains( @src, "image/png" ) ]' )
     after_login_locator = ( By.XPATH, '//*[ contains( @class, "avatar-icon" ) and contains( @src, "avatar" ) ]' )
     
-    def __init__( self, webdriver: Chrome, config: dict[ str, any] ):
+    def __init__( self, webdriver: Chrome, config: dict[ str, Any ] ):
         self.driver = webdriver
         self.config = config
     
@@ -27,6 +27,7 @@ class HyLabHeader:
             
             self.driver.refresh()
             time.sleep( 2 )
+
         except TimeoutException as ex:
             print( ex )
         

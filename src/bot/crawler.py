@@ -60,6 +60,7 @@ class WebDriverFactory:
         opts.add_argument( "--disable-popup-blocking" )
         opts.add_argument( "--no-sandbox" )
         opts.add_argument( "--lang=zh-TW" )
+        opts.add_argument( "--log-level=3" )
         if ( isHeadless ):
             opts.add_argument( "--headless=new" )
             # opts.add_argument( "--disable-gpu" )

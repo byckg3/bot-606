@@ -63,6 +63,7 @@ class WebDriverFactory:
         opts.add_argument( "--log-level=3" )
         if ( isHeadless ):
             opts.add_argument( "--headless=new" )
+            opts.add_argument( "--window-size=1680,900" )
             # opts.add_argument( "--disable-gpu" )
             # opts.add_argument( "--disable-software-rasterizer" )
             

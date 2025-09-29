@@ -38,9 +38,7 @@ class DiscordNotifier:
             response = requests.post( webhook, json = payload )
         
             if not response.status_code == 204:
-                print( "error occur!!" ) 
-           
-            print( f"HTTP status code: { response.status_code }" )
+                print( "Error: Failed to send notification." )
 
 
 # python src/bot/notifier.py

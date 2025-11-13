@@ -1,6 +1,6 @@
 import time
 from datetime import date
-from selenium.webdriver.common.by import By, ByType
+from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,8 +11,8 @@ from web.hyl.component import HyLabHeader
 
 class HyLCheckInPage( ABC ):
     
-    close_icon_locator: tuple[ ByType, str ] = ( By.XPATH, '//*[ contains( @class, "close" ) ]' )
-    finish_locator : tuple[ ByType, str ] = ( By.XPATH, '//*[ contains( text(), "簽到成功" ) ]' )
+    close_icon_locator: tuple[ str, str ] = ( By.XPATH, '//*[ contains( @class, "close" ) ]' )
+    finish_locator : tuple[ str, str ] = ( By.XPATH, '//*[ contains( text(), "簽到成功" ) ]' )
     
     def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         self.driver = webdriver
@@ -22,12 +22,12 @@ class HyLCheckInPage( ABC ):
         
     @property
     @abstractmethod
-    def ith_days_locator( self ) -> tuple[ ByType, str ]:
+    def ith_days_locator( self ) -> tuple[ str, str ]:
         pass
     
     @property
     @abstractmethod
-    def latest_days_locator( self ) -> tuple[ ByType, str ]:
+    def latest_days_locator( self ) -> tuple[ str, str ]:
         pass
         
     def add_item_to_local_storage( self ) -> None:
@@ -84,8 +84,8 @@ class HyLCheckInPage( ABC ):
     
 class GSICheckInPage( HyLCheckInPage ):
     
-    ith_days_locator: tuple[ ByType, str ] = (  By.XPATH, '//*[ contains( @class, "actived-day" ) ]/../*[ contains( @class, "item-day") ]' )
-    latest_days_locator: tuple[ ByType, str ] = (  By.XPATH, '( //*[ contains( @class, "has-signed" ) ])[ last() ]/*[ contains( @class, "item-day" ) ]' )
+    ith_days_locator: tuple[ str, str ] = (  By.XPATH, '//*[ contains( @class, "actived-day" ) ]/../*[ contains( @class, "item-day") ]' )
+    latest_days_locator: tuple[ str, str ] = (  By.XPATH, '( //*[ contains( @class, "has-signed" ) ])[ last() ]/*[ contains( @class, "item-day" ) ]' )
     
     
     def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
@@ -93,16 +93,16 @@ class GSICheckInPage( HyLCheckInPage ):
 
 class ZZZCheckInPage( HyLCheckInPage ):
     
-    ith_days_locator: tuple[ ByType, str ] = (  By.XPATH, '//*[ contains( @style, "3b211daae47"  ) ]/*[  contains( @class, "no" ) ]' )
-    latest_days_locator: tuple[ ByType, str ] = (  By.XPATH, '( //*[ contains( @src, "d0ef8d6be" ) ] )[ last() ]/../*[ contains( @class, "no" ) ]' )
+    ith_days_locator: tuple[ str, str ] = (  By.XPATH, '//*[ contains( @style, "3b211daae47"  ) ]/*[  contains( @class, "no" ) ]' )
+    latest_days_locator: tuple[ str, str ] = (  By.XPATH, '( //*[ contains( @src, "d0ef8d6be" ) ] )[ last() ]/../*[ contains( @class, "no" ) ]' )
    
     def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         super().__init__( webdriver, config )
         
 class HSRCheckInPage( HyLCheckInPage ):
    
-    ith_days_locator: tuple[ ByType, str ] = (  By.XPATH, '//*[ contains( @style, "5ccbbab8f"  ) ]/*[  contains( @class, "no" ) ]' )
-    latest_days_locator: tuple[ ByType, str ] = (  By.XPATH, '( //*[ contains( @class, "received" ) ] )[ last() ]/preceding-sibling::*[ contains( @class, "no" ) ]' )
+    ith_days_locator: tuple[ str, str ] = (  By.XPATH, '//*[ contains( @style, "5ccbbab8f"  ) ]/*[  contains( @class, "no" ) ]' )
+    latest_days_locator: tuple[ str, str ] = (  By.XPATH, '( //*[ contains( @class, "received" ) ] )[ last() ]/preceding-sibling::*[ contains( @class, "no" ) ]' )
     
     
     def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):

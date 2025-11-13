@@ -1,4 +1,6 @@
 discord.py
 selenium
-pyyaml
 requests
+pyyaml
+pymongo
+pydantic-settings

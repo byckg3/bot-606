@@ -5,20 +5,22 @@ from pymongo.results import InsertOneResult
 
 class CheckInProgressRepository:
     
-    COLLECTION_NAME = "daily_progress"
+    collection_name = "daily_progress"
+    timeField_name = "created_at"
+    metaField_name = "metadata"
     
     def __init__( self, db: Database ):
-        if self.COLLECTION_NAME not in db.list_collection_names():
+        if self.collection_name not in db.list_collection_names():
             db.create_collection(
-                self.COLLECTION_NAME,
+                self.collection_name,
                 timeseries={
-                    "timeField": "created_at",
-                    "metaField": "metadata", 
+                    "timeField": self.timeField_name,
+                    "metaField": self.metaField_name, 
                 },
                 expireAfterSeconds = 3 * 24 * 60 * 60, # 3 days
                 check_exists = True, )
         
-        self.collection = db.get_collection( self.COLLECTION_NAME )
+        self.collection = db.get_collection( self.collection_name )
         
 
     def insert( self, progress: dict ):
@@ -43,7 +45,9 @@ class CheckInProgressRepository:
             query[ "_id" ] = { "$gt": last_id }
         
         try:
-            results = self.collection.find( query ).limit( limit )
+            results = self.collection.find( query ) \
+                                     .sort( "created_at", -1 ) \
+                                     .limit( limit )
             return list( results )
         
         except Exception as e:

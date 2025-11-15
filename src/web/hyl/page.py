@@ -14,12 +14,16 @@ class HyLCheckInPage( ABC ):
     close_icon_locator: tuple[ str, str ] = ( By.XPATH, '//*[ contains( @class, "close" ) ]' )
     finish_locator : tuple[ str, str ] = ( By.XPATH, '//*[ contains( text(), "簽到成功" ) ]' )
     
-    def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
+    def __init__( self, webdriver: Chrome, settings: dict[ str, Any ] ):
         self.driver = webdriver
-        self.config = config
-        self.current_progress = ""
-        self.header = HyLabHeader( self.driver, self.config )
-        
+        self.settings = settings
+        self.header = HyLabHeader( self.driver, self.settings )
+    
+    @property
+    @abstractmethod
+    def url( self ) -> str:
+        pass
+    
     @property
     @abstractmethod
     def ith_days_locator( self ) -> tuple[ str, str ]:
@@ -29,9 +33,14 @@ class HyLCheckInPage( ABC ):
     @abstractmethod
     def latest_days_locator( self ) -> tuple[ str, str ]:
         pass
+    
+    def open( self ) -> Self:
+        self.driver.get( self.url )
+        
+        return self
         
     def add_item_to_local_storage( self ) -> None:
-        item: dict = self.config[ "ls_item" ]
+        item: dict = self.settings[ "ls_item" ]
         key, value = item[ "key" ], item[ "value" ]  
         script = f"window.localStorage.setItem( '{ key }', '{ value }' );"
         
@@ -49,48 +58,58 @@ class HyLCheckInPage( ABC ):
         try:
             self.close_popup_window()
             self.header.signin()
+            
         except Exception as ex:
+            print( "Exception occurred during login" )
             print( ex )
        
         return self
 
     def daliy_checkin( self ) -> dict[ str, str]:
+        checkin_result = { 
+            "title": self.driver.title, 
+            "page_url": self.url,
+            "progress": "",
+            "status": "failed", 
+            "date": None
+        }
         
-        log = { "title": None, "state": "failed", "date": None }
-        log[ "title" ] = self.driver.title
         try:
             ith_days_element = WebDriverWait( self.driver, 3 ).until( EC.element_to_be_clickable( self.ith_days_locator ) )
-            log[ "progress" ] = ith_days_element.text
+            checkin_result[ "progress" ] = ith_days_element.text
             
             ith_days_element.click()
             WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.finish_locator ) )
             
-            log[ "state" ] = "success"
-            log[ "date" ] = date.today()
+            checkin_result[ "status" ] = "success"
+            checkin_result[ "date" ] = date.today()
 
         except TimeoutException:
-            if log[ "state" ] == "failed":
-                log[ "progress" ] = WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.latest_days_locator ) ).text
+            if checkin_result[ "status" ] == "failed":
+                checkin_result[ "progress" ] = WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.latest_days_locator ) ).text
 
         except Exception as ex:
             self.save_screenshot()
             print( ex )
         
-        return log
+        return checkin_result
     
     def save_screenshot( self ):
         timestamp = time.strftime( "%y%m%d_%H%M%S" )
-        self.driver.save_screenshot( self.config[ "screenshot_dir" ] + f"/{timestamp}.png" )
+        self.driver.save_screenshot( self.settings[ "screenshot_dir" ] + f"/{timestamp}.png" )
     
 class GSICheckInPage( HyLCheckInPage ):
     
     ith_days_locator: tuple[ str, str ] = (  By.XPATH, '//*[ contains( @class, "actived-day" ) ]/../*[ contains( @class, "item-day") ]' )
     latest_days_locator: tuple[ str, str ] = (  By.XPATH, '( //*[ contains( @class, "has-signed" ) ])[ last() ]/*[ contains( @class, "item-day" ) ]' )
     
-    
     def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         super().__init__( webdriver, config )
-
+        
+    @property
+    def url( self ) -> str:
+        return self.settings[ "gsi_url" ]
+        
 class ZZZCheckInPage( HyLCheckInPage ):
     
     ith_days_locator: tuple[ str, str ] = (  By.XPATH, '//*[ contains( @style, "3b211daae47"  ) ]/*[  contains( @class, "no" ) ]' )
@@ -99,26 +118,33 @@ class ZZZCheckInPage( HyLCheckInPage ):
     def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         super().__init__( webdriver, config )
         
+    @property
+    def url( self ) -> str:
+        return self.settings[ "zzz_url" ]
+        
 class HSRCheckInPage( HyLCheckInPage ):
    
     ith_days_locator: tuple[ str, str ] = (  By.XPATH, '//*[ contains( @style, "5ccbbab8f"  ) ]/*[  contains( @class, "no" ) ]' )
     latest_days_locator: tuple[ str, str ] = (  By.XPATH, '( //*[ contains( @class, "received" ) ] )[ last() ]/preceding-sibling::*[ contains( @class, "no" ) ]' )
     
-    
     def __init__( self, webdriver: Chrome, config: dict[ str, Any] ):
         super().__init__( webdriver, config )
+        
+    @property
+    def url( self ) -> str:
+        return self.settings[ "hsr_url" ]
         
 class HyLPageFactory:
     
     @staticmethod
-    def create_page( page_name: str, webdriver: Chrome, config: dict[ str, Any ] ) -> HyLCheckInPage:
+    def create_page( page_name: str, webdriver: Chrome, settings: dict[ str, Any ] ) -> HyLCheckInPage:
         
         match page_name:
             case "gsi":
-                return GSICheckInPage( webdriver, config )
+                return GSICheckInPage( webdriver, settings )
             case "zzz":
-                return ZZZCheckInPage( webdriver, config )
+                return ZZZCheckInPage( webdriver, settings )
             case "hsr":
-                return HSRCheckInPage( webdriver, config )
+                return HSRCheckInPage( webdriver, settings )
             case _:
                 raise ValueError( f"Unknown page name: { page_name }" )

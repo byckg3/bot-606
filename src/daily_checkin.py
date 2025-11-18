@@ -9,20 +9,17 @@ from bot.storage.db import MongoDB
 from bot.storage.models import DailyProgress
 from bot.storage.repositories import CheckInProgressRepository
 from bot.storage.service import ProgressService
-from web.hyl.config import checkin_page_settings
+from web.hyl.config import checkin_settings
 from web.hyl.models import CheckinResult
 from web.hyl.pages import HyLPageFactory
 
 @contextmanager
-def progress_service():
+def db_connection():
     
     connection = MongoDB( mongodb_settings().URI )
     db = connection.database( mongodb_settings().DB_NAME )
     
-    progress_repository = CheckInProgressRepository( db )
-    progress_service = ProgressService( progress_repository )
-    
-    yield progress_service
+    yield db
     
     connection.close()
     
@@ -70,25 +67,29 @@ if __name__ == "__main__":
     if len( sys.argv ) >= 2:
         tasks = sys.argv[ 1: ]
     
-    settings = checkin_page_settings().model_dump()
-    clear_screenshots( settings )
-    
     headless = 1
     if headless:
         driver = WebDriverFactory.headless_chrome()
     else:
         driver = WebDriverFactory.chrome()
     
-    with progress_service() as storage_service:
+    with db_connection() as db:
+        
+        progress_repository = CheckInProgressRepository( db )
+        progress_service = ProgressService( progress_repository )
+        
+        settings = checkin_settings( db ).model_dump()
+        # print( checkin_settings( db ).model_dump() )
+        clear_screenshots( settings )
+        
         for task_name in tasks:
-           
             checkin_page = HyLPageFactory.create_page( task_name, driver, settings )
             
             checkin_page.open()
             checkin_page.login()
-            checkin_result = checkin_page.daliy_checkin()
+            checkin_result = checkin_page.daily_checkin()
             
-            last_progress = storage_service.get_last_progress( task_name )
+            last_progress = progress_service.get_last_progress( task_name )
             # print( f"Last check-in records:\n{ last_progress }" )
             progress_payload = build_progress_payload( checkin_result, last_progress )
             
@@ -100,6 +101,6 @@ if __name__ == "__main__":
                 dp.metadata.task_name = task_name
                 dp.metadata.date = progress_payload[ "date" ] 
                   
-                storage_service.save_progress( dp )
+                progress_service.save_progress( dp )
     
     driver.quit()

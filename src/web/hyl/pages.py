@@ -66,7 +66,7 @@ class HyLCheckInPage( ABC ):
        
         return self
 
-    def daliy_checkin( self ) -> CheckinResult:
+    def daily_checkin( self ) -> CheckinResult:
         data = { 
             "title": self.driver.title, 
             "page_url": self.url,

@@ -1,10 +1,12 @@
+import yaml
 from functools import lru_cache
 from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import yaml
+from bot.storage.repositories import ConfigRepository
 
-class CheckInPageSettings( BaseSettings ):
+class CheckInSettings( BaseSettings ):
 
+    name: str = "hylab_checkin_config"
     gsi_url: str
     zzz_url: str
     hsr_url: str
@@ -20,7 +22,7 @@ class CheckInPageSettings( BaseSettings ):
         if not file_path.exists():
             raise FileNotFoundError( f"Yaml file not found: { file_path }" )
         
-        content = {}
+        content = {} 
         with open( file_path, 'r', encoding='utf-8' ) as file:
             if file_path.suffix == '.yaml':
                 content = yaml.safe_load( file )
@@ -30,7 +32,15 @@ class CheckInPageSettings( BaseSettings ):
         return cls( **content )
 
 @lru_cache()
-def checkin_page_settings():
-    return CheckInPageSettings.from_yaml( "./checkin_config.yaml" )
-
-# print( checkin_page_settings().model_dump() )
+def checkin_settings( db ):
+    
+    config_repository = ConfigRepository( db )
+    
+    config = config_repository.get_config( "hylab_checkin_config" )
+    if config:
+        return CheckInSettings( **config )
+    
+    config = CheckInSettings.from_yaml( "./checkin_config.yaml" )
+    config_repository.save_config( config.name, config.model_dump() )
+    
+    return config

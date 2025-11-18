@@ -6,10 +6,12 @@ from bot.config import mongodb_settings
 from bot.crawler import WebDriverFactory
 from bot.notifier import DiscordNotifier
 from bot.storage.db import MongoDB
+from bot.storage.models import DailyProgress
 from bot.storage.repositories import CheckInProgressRepository
 from bot.storage.service import ProgressService
 from web.hyl.config import checkin_page_settings
-from web.hyl.page import HyLPageFactory
+from web.hyl.models import CheckinResult
+from web.hyl.pages import HyLPageFactory
 
 @contextmanager
 def progress_service():
@@ -22,27 +24,27 @@ def progress_service():
     
     yield progress_service
     
-    print( "\nTeardown CheckInProgressRepository for tests" )
     connection.close()
     
     
-def build_progress_payload( checkin_result, last_progress = {} ):
+def build_progress_payload( checkin_result: CheckinResult, 
+                            last_progress: DailyProgress ):
     payload = { 
-        "title": checkin_result[ "title" ],
-        "url": checkin_result[ "page_url" ],
-        "date": checkin_result[ "date" ],
-        "progress": checkin_result[ "progress" ],
-        "description": f"目前簽到: {last_progress.get( "date", "" )}",
+        "title": checkin_result.title,
+        "url": checkin_result.page_url,
+        "date": checkin_result.date,
+        "progress": checkin_result.progress,
+        "description": f"目前簽到: {last_progress.metadata.date}",
         "checkin_status": "",
     }
     
-    if ( checkin_result[ "status" ] == "success" and 
-         last_progress.get( "progress", "" ) != checkin_result[ "progress" ] ):
+    if ( checkin_result.status == "success" and 
+         last_progress.progress != checkin_result.progress ):
         
         payload[ "checkin_status" ] = "簽到成功"
-        payload[ "description" ] = f"目前簽到: {checkin_result[ "date" ]}"
+        payload[ "description" ] = f"目前簽到: {checkin_result.date}"
         
-    elif last_progress.get( "progress", "" ) == checkin_result[ "progress" ]:
+    elif last_progress.progress == checkin_result.progress:
         payload[ "checkin_status" ] = "已簽到"
         
     else:
@@ -87,21 +89,17 @@ if __name__ == "__main__":
             checkin_result = checkin_page.daliy_checkin()
             
             last_progress = storage_service.get_last_progress( task_name )
-            # print( f"Last check-in records: { last_progress }" )
+            # print( f"Last check-in records:\n{ last_progress }" )
             progress_payload = build_progress_payload( checkin_result, last_progress )
             
             DiscordNotifier().notify_checkin_progress( progress_payload )
             
             if progress_payload[ "checkin_status" ] == "簽到成功":
-                storage_service.save_progress(
-                    { 
-                        "title": progress_payload[ "title" ],
-                        "progress": progress_payload[ "progress" ],
-                        "metadata": { 
-                            "task_name": task_name, 
-                            "date": progress_payload[ "date" ],
-                        }
-                    } 
-                )
+                
+                dp = DailyProgress( **progress_payload )
+                dp.metadata.task_name = task_name
+                dp.metadata.date = progress_payload[ "date" ] 
+                  
+                storage_service.save_progress( dp )
     
     driver.quit()

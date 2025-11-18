@@ -32,3 +32,4 @@ class MongoDB:
     def close( self ):
         # Ensures that the client will close when you finish/error
         self.client.close()
+        print( "\nMongoDB connection closed." )

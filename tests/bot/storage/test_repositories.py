@@ -1,7 +1,8 @@
 import pytest
-from datetime import date, datetime, timezone
+from datetime import date
 from bot.config import mongodb_settings
 from bot.storage.db import MongoDB
+from bot.storage.models import DailyProgress
 from bot.storage.repositories import CheckInProgressRepository
 
 @pytest.fixture( scope = "class" )
@@ -16,7 +17,7 @@ def progress_repository():
     yield progress_repository
     
     progress_repository.delete( 
-        { "metadata.task_name": { "$regex": TestCheckinProgressRepository.task, 
+        { "metadata.task_name": { "$regex": TestCheckInProgressRepository.task, 
                                   "$options": "i" } 
         } 
     )
@@ -26,13 +27,14 @@ def progress_repository():
 
 
 @pytest.mark.db
-class TestCheckinProgressRepository:
+class TestCheckInProgressRepository:
     
     today: str = str( date.today() )  # Current local date
     task: str = "test"
     
     def test_insert_progress( self, progress_repository ):
-        inserted_id = progress_repository.insert(
+        
+        dp = DailyProgress.model_validate(
             { 
                 "progress": "第 N 天",
                 "title": "每日簽到",
@@ -42,17 +44,18 @@ class TestCheckinProgressRepository:
                 }
             } 
         )
+        inserted_id = progress_repository.insert( dp )
         # print( f"\nInserted ID: {inserted_id}" )
         
         assert inserted_id is not None
     
     
-    def test_find_progress( self, progress_repository ):
+    def test_find_progress( self, progress_repository: CheckInProgressRepository ):
         results = progress_repository.find( { "metadata.date": self.today } )
         # print( results )
         
         assert len( results ) > 0
-        assert results[ 0 ][ "metadata" ][ "date" ] == self.today
+        assert results[ 0 ].metadata.date == self.today
     
     
     # https://www.mongodb.com/docs/upcoming/core/timeseries/timeseries-limitations/

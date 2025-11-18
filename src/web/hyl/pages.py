@@ -8,6 +8,7 @@ from selenium.common.exceptions import TimeoutException
 from typing import Any, Self
 from abc import ABC, abstractmethod
 from web.hyl.component import HyLabHeader
+from web.hyl.models import CheckinResult, CheckInTask
 
 class HyLCheckInPage( ABC ):
     
@@ -65,28 +66,29 @@ class HyLCheckInPage( ABC ):
        
         return self
 
-    def daliy_checkin( self ) -> dict[ str, str]:
-        checkin_result = { 
+    def daliy_checkin( self ) -> CheckinResult:
+        data = { 
             "title": self.driver.title, 
             "page_url": self.url,
             "progress": "",
             "status": "failed", 
             "date": None
         }
+        checkin_result = CheckinResult( **data )
         
         try:
             ith_days_element = WebDriverWait( self.driver, 3 ).until( EC.element_to_be_clickable( self.ith_days_locator ) )
-            checkin_result[ "progress" ] = ith_days_element.text
+            checkin_result.progress = ith_days_element.text
             
             ith_days_element.click()
             WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.finish_locator ) )
             
-            checkin_result[ "status" ] = "success"
-            checkin_result[ "date" ] = date.today()
+            checkin_result.status = "success"
+            checkin_result.date = str( date.today() )
 
         except TimeoutException:
-            if checkin_result[ "status" ] == "failed":
-                checkin_result[ "progress" ] = WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.latest_days_locator ) ).text
+            if checkin_result.status == "failed":
+                checkin_result.progress = WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.latest_days_locator ) ).text
 
         except Exception as ex:
             self.save_screenshot()
@@ -108,7 +110,7 @@ class GSICheckInPage( HyLCheckInPage ):
         
     @property
     def url( self ) -> str:
-        return self.settings[ "gsi_url" ]
+        return self.settings[ f"{CheckInTask.GSI}_url" ]
         
 class ZZZCheckInPage( HyLCheckInPage ):
     
@@ -120,7 +122,7 @@ class ZZZCheckInPage( HyLCheckInPage ):
         
     @property
     def url( self ) -> str:
-        return self.settings[ "zzz_url" ]
+        return self.settings[ f"{CheckInTask.ZZZ}_url" ]
         
 class HSRCheckInPage( HyLCheckInPage ):
    
@@ -132,7 +134,7 @@ class HSRCheckInPage( HyLCheckInPage ):
         
     @property
     def url( self ) -> str:
-        return self.settings[ "hsr_url" ]
+        return self.settings[ f"{CheckInTask.HSR}_url" ]
         
 class HyLPageFactory:
     
@@ -140,11 +142,11 @@ class HyLPageFactory:
     def create_page( page_name: str, webdriver: Chrome, settings: dict[ str, Any ] ) -> HyLCheckInPage:
         
         match page_name:
-            case "gsi":
+            case CheckInTask.GSI:
                 return GSICheckInPage( webdriver, settings )
-            case "zzz":
+            case CheckInTask.ZZZ:
                 return ZZZCheckInPage( webdriver, settings )
-            case "hsr":
+            case CheckInTask.HSR:
                 return HSRCheckInPage( webdriver, settings )
             case _:
                 raise ValueError( f"Unknown page name: { page_name }" )

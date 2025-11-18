@@ -1,3 +1,4 @@
+from bot.storage.models import DailyProgress
 from bot.storage.repositories import CheckInProgressRepository
 
 class ProgressService:
@@ -6,11 +7,11 @@ class ProgressService:
         self.repository = repository
         
         
-    def save_progress( self, progress: dict ):
+    def save_progress( self, progress: DailyProgress ):
         return self.repository.insert( progress )
     
     
-    def get_last_progress( self, task_name: str ):
+    def get_last_progress( self, task_name: str ) -> DailyProgress:
         
         query = { "metadata.task_name": task_name }
         results = self.repository.find( query, limit = 1 )
@@ -18,4 +19,4 @@ class ProgressService:
         if results:
             return results[ 0 ]
         else:
-            return {}
+            return DailyProgress()

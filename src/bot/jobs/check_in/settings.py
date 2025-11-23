@@ -4,12 +4,9 @@ from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from bot.storage.repositories import ConfigRepository
 
-class CheckInPageConfig( BaseSettings ):
+class HylabLoginSettings( BaseSettings ):
 
-    name: str = "hylab_checkin_page_config"
-    gsi_url: str
-    zzz_url: str
-    hsr_url: str
+    name: str = "hylab_login_settings"
 
     model_config = SettingsConfigDict( 
         extra = "allow",
@@ -30,18 +27,18 @@ class CheckInPageConfig( BaseSettings ):
             # print( f"Loaded config from { path }:\n{ content }" )
         
         return cls( **content )
-
-
+    
+    
 @lru_cache()
-def checkin_page_config( db ):
+def hylab_login_settings( db ):
     
     config_repository = ConfigRepository( db )
     
-    config = config_repository.get_config( "hylab_checkin_page_config" )
+    config = config_repository.get_config( "hylab_login_settings" )
     if config:
-        return CheckInPageConfig( **config )
+        return HylabLoginSettings( **config )
     
-    config = CheckInPageConfig.from_yaml( "./checkin_page_config.yaml" )
+    config = HylabLoginSettings.from_yaml( "./login_settings.yaml" )
     config_repository.save_config( config.name, config.model_dump() )
     
     return config

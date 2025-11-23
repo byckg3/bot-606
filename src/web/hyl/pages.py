@@ -72,7 +72,7 @@ class HyLCheckInPage( ABC ):
             "page_url": self.url,
             "progress": "",
             "status": "failed", 
-            "date": None
+            "date": ""
         }
         checkin_result = CheckinResult( **data )
         
@@ -84,7 +84,7 @@ class HyLCheckInPage( ABC ):
             WebDriverWait( self.driver, 3 ).until( EC.visibility_of_element_located( self.finish_locator ) )
             
             checkin_result.status = "success"
-            checkin_result.date = str( date.today() )
+            checkin_result.date = str( date.today() ) # ex: "2024-06-15"
 
         except TimeoutException:
             if checkin_result.status == "failed":

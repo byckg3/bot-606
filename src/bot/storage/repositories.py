@@ -1,8 +1,9 @@
+import pymongo
+from pymongo.database import Database
 from datetime import datetime, timezone
 from bson import ObjectId
-from pymongo.database import Database
-from pymongo.results import InsertOneResult
-from bot.storage.models import DailyProgress
+from bot.storage.models.mappers import ProgressMapper
+from bot.storage.models.progress import DailyProgress
 
 class CheckInProgressRepository:
     
@@ -25,14 +26,15 @@ class CheckInProgressRepository:
         self.collection = db.get_collection( self.collection_name )
         
 
-    def insert( self, progress: DailyProgress ) -> str:
+    def insert( self, dp: DailyProgress ) -> str:
         current_utc = datetime.now( timezone.utc )
         
-        progress.updated_at = current_utc
-        progress.created_at = current_utc
+        dp.updated_at = current_utc
+        dp.created_at = current_utc
         
+        progress_doc = ProgressMapper.to_doc( dp )
         try:
-            result = self.collection.insert_one( progress.model_dump() )
+            result = self.collection.insert_one( progress_doc )
             if not result.inserted_id:
                 raise RuntimeError( "no inserted_id returned" )
             
@@ -42,36 +44,51 @@ class CheckInProgressRepository:
             raise RuntimeError( "Failed to insert progress" ) from e
         
         
-    def find( self, query: dict, last_id: ObjectId | None = None, limit: int = 20 ) -> list[ DailyProgress ]:
+    def find_by( self, condition: dict[ str, str ], last_id: ObjectId | None = None, limit: int = 20 ) -> list:
+        
+        query: dict = {}
+        if "date" in condition:
+            query[ "metadata.date" ] = condition[ "date" ]
+            
+        if "task_code" in condition:
+            query[ "metadata.task_code" ] = condition[ "task_code" ]
+        
         if last_id:
             query[ "_id" ] = { "$gt": last_id }
         
         try:
             results = self.collection.find( query ) \
-                                     .sort( "created_at", -1 ) \
+                                     .sort( "created_at", pymongo.DESCENDING ) \
                                      .limit( limit )
-            return [ DailyProgress.model_validate( result ) for result in results ]
+                                     
+            return [ ProgressMapper.to_model( result ) for result in results ]
         
         except Exception as e:
             raise RuntimeError( "Failed to find progress" ) from e
 
-
-    def delete( self, query: dict ) -> int:
+    def update( self, query_filter: dict, update: dict ) -> int:
         try:
+            query = ProgressMapper.to_doc_fields( query_filter )
+            updated_fields = ProgressMapper.to_doc_fields( update )
+            result = self.collection.update_many( query, { "$set": updated_fields } )
+            
+            return result.modified_count
+        
+        except Exception as e:
+            raise RuntimeError( "Failed to update progress" ) from e
+
+
+    def delete( self, query_filter: dict ) -> int:
+        try:
+            query = ProgressMapper.to_doc_fields( query_filter )
             result = self.collection.delete_many( query )
+            
             return result.deleted_count
         
         except Exception as e:
             raise RuntimeError( "Failed to delete progress" ) from e
         
-        
-    def update( self, query_filter: dict, update: dict ) -> int:
-        try:
-            result = self.collection.update_many( query_filter, { "$set": update } )
-            return result.modified_count
-        
-        except Exception as e:
-            raise RuntimeError( "Failed to update progress" ) from e
+   
         
 
 class ConfigRepository:
@@ -114,3 +131,9 @@ class ConfigRepository:
         
         except Exception as e:
             raise RuntimeError( "Failed to get configuration" ) from e
+        
+
+class CacheRepository:
+    
+    def __init__(self, client ):
+        self.client = client

@@ -1,3 +1,4 @@
+import redis
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
@@ -7,11 +8,12 @@ class MongoDB:
         
         # Create a new client and connect to the server
         self.client = MongoClient( 
-                        mongo_uri,
-                        server_api = ServerApi( 
-                                        "1", 
-                                        strict = True, 
-                                        deprecation_errors = True ) )
+            mongo_uri,
+            server_api = ServerApi( 
+                            "1", 
+                            strict = True, 
+                            deprecation_errors = True ) 
+        )
         self.ping()
         print( "\ncreate mongodb connection successfully" )
         
@@ -33,3 +35,18 @@ class MongoDB:
         # Ensures that the client will close when you finish/error
         self.client.close()
         print( "\nMongoDB connection closed." )
+        
+
+class RedisDB:
+
+    def __init__( self, redis_uri: str ):
+        self.client = redis.from_url( redis_uri )
+        print( "\ncreate redis connection successfully" )
+        
+    def close( self ):
+        self.client.close()
+        print( "\nRedis connection closed." )
+        
+        
+
+

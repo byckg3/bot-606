@@ -1,8 +1,8 @@
 import pytest
 from datetime import date
-from bot.config import mongodb_settings
-from bot.storage.db import MongoDB
-from bot.storage.models import DailyProgress
+from bot.storage.core.config import mongodb_settings
+from bot.storage.core.dbs import MongoDB
+from bot.storage.models.progress import DailyProgress
 from bot.storage.repositories import CheckInProgressRepository
 
 @pytest.fixture( scope = "class" )
@@ -17,8 +17,8 @@ def progress_repository():
     yield progress_repository
     
     progress_repository.delete( 
-        { "metadata.task_name": { "$regex": TestCheckInProgressRepository.task, 
-                                  "$options": "i" } 
+        { "task_code": { "$regex": TestCheckInProgressRepository.task, 
+                         "$options": "i" } 
         } 
     )
     print( "\nTeardown CheckInProgressRepository for tests" )
@@ -38,10 +38,8 @@ class TestCheckInProgressRepository:
             { 
                 "progress": "第 N 天",
                 "title": "每日簽到",
-                "metadata": { 
-                    "task_name": self.task, 
-                    "date": self.today,
-                }
+                "task_code": self.task, 
+                "date": self.today,
             } 
         )
         inserted_id = progress_repository.insert( dp )
@@ -49,22 +47,21 @@ class TestCheckInProgressRepository:
         
         assert inserted_id is not None
     
-    
     def test_find_progress( self, progress_repository: CheckInProgressRepository ):
-        results = progress_repository.find( { "metadata.date": self.today } )
+        results = progress_repository.find_by( { "date": self.today }, limit = 1 )
         # print( results )
         
         assert len( results ) > 0
-        assert results[ 0 ].metadata.date == self.today
+        assert results[ 0 ].date == self.today
     
     
     # https://www.mongodb.com/docs/upcoming/core/timeseries/timeseries-limitations/
     def test_update_progress( self, progress_repository ):
         query_filter = { 
-            "metadata.date": self.today
+            "date": self.today
         }
         update_operation = {
-            "metadata.task_name": "updated_" + self.task,
+            "task_code": "updated_" + self.task,
         }
         
         modified_count = progress_repository.update( query_filter,
@@ -77,7 +74,7 @@ class TestCheckInProgressRepository:
     def test_delete_progress( self, progress_repository ):
         deleted_count = progress_repository.delete( 
             { 
-                "metadata.date": self.today,
+                "date": self.today,
             } 
         )
         # print( f"\nDeleted count: {deleted_count}" )

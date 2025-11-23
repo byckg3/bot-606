@@ -13,10 +13,23 @@ class MongoDBSettings( BaseSettings ):
         env_prefix = "MONGO_",
         extra = "ignore",
     )
+    
+class RedisSettings( BaseSettings ):
+
+    URI: str
+
+    model_config = SettingsConfigDict( 
+        env_prefix = "REDIS_",
+        extra = "ignore",
+    )
+    
 
 @lru_cache()
 def mongodb_settings():
     return MongoDBSettings() # type: ignore
 
-
 # print( mongodb_settings().model_dump() )
+
+@lru_cache()
+def redis_settings():
+    return RedisSettings() # type: ignore

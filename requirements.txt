@@ -1,6 +1,7 @@
 discord.py
 selenium
 requests
+redis
 pyyaml
 pymongo
 pydantic-settings

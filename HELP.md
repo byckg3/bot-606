@@ -16,4 +16,5 @@
 - [Capabilities and ChromeOptions](https://developer.chrome.com/docs/chromedriver/capabilities)
 - [undetected-chromedriver](https://pypi.org/project/undetected-chromedriver/)
 - [MongoDB PyMongo Documentation](https://www.mongodb.com/docs/languages/python/pymongo-driver/current/get-started/)
+- [Redis Documentation](https://redis.io/docs/latest/develop/)
 - [Pytest Documentation](https://docs.pytest.org/en/stable/getting-started.html)

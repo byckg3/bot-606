@@ -2,6 +2,7 @@ import pymongo
 from pymongo.database import Database
 from datetime import datetime, timezone
 from bson import ObjectId
+from bot.storage.core.dbs import RedisDB
 from bot.storage.models.mappers import ProgressMapper
 from bot.storage.models.progress import DailyProgress
 
@@ -44,7 +45,7 @@ class CheckInProgressRepository:
             raise RuntimeError( "Failed to insert progress" ) from e
         
         
-    def find_by( self, condition: dict[ str, str ], last_id: ObjectId | None = None, limit: int = 20 ) -> list:
+    def find_by( self, condition: dict[ str, str ], last_id: ObjectId | None = None, limit: int = 20 ) -> list[ DailyProgress ]:
         
         query: dict = {}
         if "date" in condition:
@@ -66,11 +67,11 @@ class CheckInProgressRepository:
         except Exception as e:
             raise RuntimeError( "Failed to find progress" ) from e
 
-    def update( self, query_filter: dict, update: dict ) -> int:
+    def update( self, query_filter: dict, content: dict ) -> int:
         try:
-            query = ProgressMapper.to_doc_fields( query_filter )
-            updated_fields = ProgressMapper.to_doc_fields( update )
-            result = self.collection.update_many( query, { "$set": updated_fields } )
+            query = ProgressMapper.to_doc_filters( query_filter )
+            updated = ProgressMapper.to_doc_filters( content )
+            result = self.collection.update_many( query, { "$set": updated } )
             
             return result.modified_count
         
@@ -80,15 +81,13 @@ class CheckInProgressRepository:
 
     def delete( self, query_filter: dict ) -> int:
         try:
-            query = ProgressMapper.to_doc_fields( query_filter )
+            query = ProgressMapper.to_doc_filters( query_filter )
             result = self.collection.delete_many( query )
             
             return result.deleted_count
         
         except Exception as e:
             raise RuntimeError( "Failed to delete progress" ) from e
-        
-   
         
 
 class ConfigRepository:
@@ -135,5 +134,22 @@ class ConfigRepository:
 
 class CacheRepository:
     
-    def __init__(self, client ):
-        self.client = client
+    def __init__( self, redis_client, prefix: str = "bot606:cache:" ):
+        self.client = redis_client
+        self.key_prefix = prefix
+        
+    
+    def set( self, key: str, value: str, expire_seconds: int = 3600 ) -> None:
+        full_key = self.key_prefix + key
+        
+        return self.client.set( full_key, value, ex = expire_seconds )
+        
+        
+    def get( self, key: str ) -> str | None:
+        full_key: str = self.key_prefix + key
+        
+        value = self.client.get( full_key )
+        if value is not None:
+            return value
+        
+        return None

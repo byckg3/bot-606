@@ -19,6 +19,7 @@ class RedisSettings( BaseSettings ):
     URI: str
 
     model_config = SettingsConfigDict( 
+        env_file = ".env",                               
         env_prefix = "REDIS_",
         extra = "ignore",
     )
@@ -28,8 +29,9 @@ class RedisSettings( BaseSettings ):
 def mongodb_settings():
     return MongoDBSettings() # type: ignore
 
-# print( mongodb_settings().model_dump() )
 
 @lru_cache()
 def redis_settings():
     return RedisSettings() # type: ignore
+
+# print( redis_settings().model_dump() )

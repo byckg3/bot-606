@@ -23,7 +23,7 @@ class ProgressMapper:
         return doc
     
     @staticmethod
-    def to_doc_fields( query: dict ) -> dict:
+    def to_doc_filters( query: dict ) -> dict:
         transformed_query = {}
         
         for key, value in query.items():

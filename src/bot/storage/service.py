@@ -1,22 +1,31 @@
 from bot.storage.models.progress import DailyProgress
-from bot.storage.repositories import CheckInProgressRepository
+from bot.storage.repositories import CacheRepository, CheckInProgressRepository
 
 class ProgressService:
     
-    def __init__( self, repository: CheckInProgressRepository ):
-        self.repository = repository
+    def __init__( self, progress_repo: CheckInProgressRepository, 
+                        cache_repo: CacheRepository ):
+        self.progress_repository = progress_repo
+        self.cache_repository = cache_repo
         
         
     def save_progress( self, progress: DailyProgress ):
-        return self.repository.insert( progress )
+        self.progress_repository.insert( progress )
+        return self.cache_repository.set( progress.task_code, progress.model_dump_json() )
     
     
     def get_last_progress( self, task_code: str ) -> DailyProgress:
         
-        query = { "task_code": task_code }
-        results = self.repository.find_by( query, limit = 1 )
+        cached = self.cache_repository.get( task_code )
+        if cached is not None:
+            return DailyProgress.model_validate_json( cached )
         
-        if results:
-            return results[ 0 ]
-        else:
+        query = { "task_code": task_code }
+        results = self.progress_repository.find_by( query, limit = 1 )
+        if not results:
             return DailyProgress()
+            
+        last = results[ 0 ]
+        self.cache_repository.set( task_code, last.model_dump_json() )
+        
+        return last

@@ -30,9 +30,7 @@ class HylabLoginSettings( BaseSettings ):
     
     
 @lru_cache()
-def hylab_login_settings( db ):
-    
-    config_repository = ConfigRepository( db )
+def hylab_login_settings( config_repository: ConfigRepository ):
     
     config = config_repository.get_config( "hylab_login_settings" )
     if config:

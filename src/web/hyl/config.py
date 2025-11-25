@@ -33,9 +33,7 @@ class CheckInPageConfig( BaseSettings ):
 
 
 @lru_cache()
-def checkin_page_config( db ):
-    
-    config_repository = ConfigRepository( db )
+def checkin_page_config( config_repository: ConfigRepository ):
     
     config = config_repository.get_config( "hylab_checkin_page_config" )
     if config:

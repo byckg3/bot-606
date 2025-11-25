@@ -1,4 +1,3 @@
-
 import pytest
 from bot.storage.models.mappers import ProgressMapper
 from bot.storage.models.progress import DailyProgress
@@ -51,7 +50,7 @@ class TestProgressMapper:
             "date": "2024-06-15",
             "title": "test title",
         }
-        actual_transformed_query = ProgressMapper.to_doc_fields( query )
+        actual_transformed_query = ProgressMapper.to_doc_filters( query )
         expected_transformed_query = {
             "metadata.task_code": "test",
             "metadata.date": "2024-06-15",

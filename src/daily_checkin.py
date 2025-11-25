@@ -3,26 +3,29 @@ import shutil
 import sys
 from contextlib import contextmanager
 from bot.jobs.check_in.settings import hylab_login_settings
-from bot.storage.core.config import mongodb_settings
+from bot.storage.core.config import mongodb_settings, redis_settings
 from bot.crawler import WebDriverFactory
 from bot.notifier import DiscordNotifier
-from bot.storage.core.dbs import MongoDB
+from bot.storage.core.dbs import MongoDB, RedisDB
 from bot.storage.models.progress import DailyProgress
-from bot.storage.repositories import CheckInProgressRepository
+from bot.storage.repositories import CacheRepository, CheckInProgressRepository, ConfigRepository
 from bot.storage.service import ProgressService
 from web.hyl.config import checkin_page_config
 from web.hyl.models import CheckinResult
 from web.hyl.pages import HyLPageFactory
 
 @contextmanager
-def db_connection():
+def context():
     
     connection = MongoDB( mongodb_settings().URI )
-    db = connection.database( mongodb_settings().DB_NAME )
+    mongo_db = connection.database( mongodb_settings().DB_NAME )
     
-    yield db
+    redis = RedisDB( redis_settings().URI )
+    
+    yield mongo_db, redis
     
     connection.close()
+    redis.close()
     
     
 def build_progress_payload( checkin_result: CheckinResult, 
@@ -33,6 +36,7 @@ def build_progress_payload( checkin_result: CheckinResult,
         "date": checkin_result.date,
         "progress": checkin_result.progress,
         "description": f"目前簽到: {last_progress.date}",
+        "task_code": last_progress.task_code,
         "checkin_status": "",
     }
     
@@ -74,13 +78,15 @@ if __name__ == "__main__":
     else:
         driver = WebDriverFactory.chrome()
     
-    with db_connection() as db:
+    with context() as ( mongo_db, redis ):
         
-        progress_repository = CheckInProgressRepository( db )
-        progress_service = ProgressService( progress_repository )
+        progress_repository = CheckInProgressRepository( mongo_db )
+        cache_repository = CacheRepository( redis.client )
+        progress_service = ProgressService( progress_repository, cache_repository )
         
-        login_settings = hylab_login_settings( db ).model_dump()
-        page_config = checkin_page_config( db ).model_dump()
+        config_repository = ConfigRepository( mongo_db )
+        login_settings = hylab_login_settings( config_repository ).model_dump()
+        page_config = checkin_page_config( config_repository ).model_dump()
         clear_screenshots( page_config )
         
         checkin_settings = login_settings | page_config
@@ -92,19 +98,19 @@ if __name__ == "__main__":
             checkin_page.open()
             checkin_page.login()
             checkin_result = checkin_page.daily_checkin()
-            print( f"Check-in result:\n{ checkin_result }" )
+            # print( f"Check-in result:\n{ checkin_result }" )
             
             last_progress = progress_service.get_last_progress( task_code )
-            print( f"Last check-in records:\n{ last_progress }" )
+            # print( f"Last check-in records:\n{ last_progress }" )
             
-            progress_payload = build_progress_payload( checkin_result, last_progress )
-            print( f"Check-in result payload:\n{ progress_payload }" )
+            progress_info = build_progress_payload( checkin_result, last_progress )
+            # print( f"Check-in result payload:\n{ progress_payload }" )
             
-            DiscordNotifier().notify_checkin_progress( progress_payload )
+            DiscordNotifier().notify_checkin_progress( progress_info )
             
-            if progress_payload[ "checkin_status" ] == "簽到成功":
+            if progress_info[ "checkin_status" ] == "簽到成功":
                 
-                dp = DailyProgress.model_validate( progress_payload )
+                dp = DailyProgress.model_validate( progress_info )
                 progress_service.save_progress( dp )
     
     driver.quit()

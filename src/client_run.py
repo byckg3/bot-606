@@ -16,7 +16,7 @@ import subprocess
 # python3 src/client_run.py
 if __name__ == "__main__":
 
-    dir_path = r"/Users/byc/Downloads/SimpleWebsocketClient"
+    dir_path = r"<PATH_TO_CLIENT_FOLDER>"
     port = "8000"
 
     server_process = subprocess.Popen(

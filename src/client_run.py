@@ -5,7 +5,7 @@ import subprocess
 import webbrowser
 import time
 import subprocess
-from playwright.async_api import async_playwright
+# from playwright.async_api import async_playwright
 
 # def start_server():
 #     Handler = http.server.SimpleHTTPRequestHandler
@@ -13,10 +13,10 @@ from playwright.async_api import async_playwright
 #         print( f"Server started at http://localhost:{PORT}" )
 #         httpd.serve_forever()
 
-
+# python3 src/client_run.py
 if __name__ == "__main__":
 
-    dir_path = r"<PATH_TO_YOUR_DIRECTORY>"
+    dir_path = r"/Users/byc/Downloads/SimpleWebsocketClient"
     port = "8000"
 
     server_process = subprocess.Popen(

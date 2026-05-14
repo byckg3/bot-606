@@ -2,10 +2,9 @@
 
 ### commands
 - python -m venv .venv
-- .venv\Scripts\activate
-- deactivate
+- .venv\Scripts\activate ( deactivate )
 - pip freeze > requirements.txt
-- pip list --outdatedpip 
+- pip list --outdatedpip
 - pip install -U selenium
 - pip install -r requirements.txt
 

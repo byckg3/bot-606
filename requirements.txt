@@ -5,3 +5,4 @@ redis
 pyyaml
 pymongo
 pydantic-settings
+pytest-playwright

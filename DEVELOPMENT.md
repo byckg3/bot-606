@@ -1,8 +1,10 @@
 # bot-606
 
 ### commands
+- pyenv versions
 - python -m venv .venv
 - .venv\Scripts\activate ( deactivate )
+- chmode +x .venv/bin/activate && source .venv/bin/activate
 - pip freeze > requirements.txt
 - pip list --outdatedpip
 - pip install -U selenium
